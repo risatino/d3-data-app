@@ -1,34 +1,21 @@
 <!DOCTYPE html>
-<meta charset='utf-8'>
-<html>
-
+<html lang="en">
 <head>
-	<!-- Bootstrap CDN -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-
-	<!-- Custom CSS -->
-	<!-- <link rel="stylesheet" type="text/css" href='{{ url_for("static", filename="styles.css") }}'> -->
-	<link rel="stylesheet" href="../static/style.css">
-	
-
-	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-	<title>Data Journalism</title>
+  <meta charset="utf-8">
+  <title>Data Journalism D3js</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+  
 </head>
-
 <body>
-		<div class="container-fluid">
-			<div class="row">
-				<div class="col-xs-6  col-md-12">
-					<div class="iframeContainer">
-						<div class="embed-responsive embed-responsive-4by3">
-							<iframe class="embed-responsive-item" src="d3"></iframe>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+  <div class="container  data_header">  </div>
+  <div class="text-center">
+    <h1>Health Watch: Current Trends That Shape Our Lives</h1>
+  </div>
 
+  <div class="container">
+    <iframe src="d3.html" frameborder="0" width="100%" height="800"></iframe>
+  </div>
 </body>
-
 </html>

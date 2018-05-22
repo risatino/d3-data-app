@@ -1,490 +1,474 @@
-function setOriginalAxisData(xAxisParam, yAxisParam){
+/*******************************************************************
+ * This javascript file plots the interractive graphs for the census and health
+ * data for this project using D3.js
+ ******************************************************************/
 
-
-  console.log("X Axis: ", xAxisParam);
-  console.log("Y Axis: ", yAxisParam);
-  
-
-  // Define SVG area dimensions
+ // set the svg size
 var svgWidth = 800;
-var svgHeight = 600;
+var svgHeight = 500;
 
-// Define the chart's margins as an object
+// set the margins
 var margin = {
-  top: 60,
-  right: 60,
-  bottom: 100,
-  left: 160
-};
+    top: 40,
+    right: 20,
+    bottom: 90,
+    left: 90
+  };
+  
+  // calculate the plot area dimensions
+  var width = svgWidth - margin.left - margin.right;
+  var height = svgHeight - margin.top - margin.bottom;
 
-// Define dimensions of the chart area
-var chartWidth = svgWidth - margin.left - margin.right;
-var chartHeight = svgHeight - margin.top - margin.bottom;
+  //Scales for the axes
+  var xScale = null;
+  var yScale = null;
 
-
-
-// Select body, append SVG area to it, and set its dimensions
-var svg = d3
-  .select("body")
+// Create an SVG wrapper,
+// append an SVG group that will hold our chart,
+// and shift the latter by left and top margins.
+// =================================
+var svg = d3.select("#svgcontainer")
     .append("svg")
-      .attr("width", svgWidth)
-      .attr("height", svgHeight)
-      // Append a group area, then set its margins
-      .append("g")
-        .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
+    .attr("width", svgWidth)
+    .attr("height", svgHeight);
 
+var chartGroup = svg.append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+function createXAxis(healthData, xValue){
+    console.log("Recreating X Axis");
 
-factorY = 1;
-yLabel1 = "Lacks Healthcare (%)";
-yLabel2 = "Smokes (%)";
-yLabel3 = "Obese (%)";
-xLabel1 = "In Poverty (%)";
-xLabel2 = "Age (Median)";
-xLabel3 = "Household Income (Median)";
-
-if(xAxisParam == "age"){
-  factorX = 1;
-};
-if(xAxisParam == "poverty"){
-  factorX = 1;
-};
-if(xAxisParam == "income"){
-  factorX = 1000;
-};
-
-// Load data from forcepoints.csv
-d3.csv("/static/data.csv", function(error, csvData) {
-
-  minX1 = d3.min(csvData, function(data) {
-    data[xAxisParam] = parseFloat(data[xAxisParam]);
-    return data[xAxisParam];
-  }) - (1*factorX) ;
-  minY1 = d3.min(csvData, function(data) {
-    data[yAxisParam] = parseFloat(data[yAxisParam]);
-    return data[yAxisParam];
-  }) - (0.5*factorY);
-  maxX1 = d3.max(csvData, function(data) {
-    data[xAxisParam] = parseFloat(data[xAxisParam]);
-    return data[xAxisParam];
-  }) + (1.5*factorX);
-  maxY1 = d3.max(csvData, function(data) {
-    data[yAxisParam] = parseFloat(data[yAxisParam]);
-    return data[yAxisParam];
-  }) + (1*factorY) ;
-  console.log("first:"+"minX:"+minX1+";maxX:"+maxX1+"minY:"+minY1+";maxY:"+maxY1);
-  console.log("Testing3");
-  
-  // Throw an error if one occurs
-  if (error) throw error;
-
-  // Print the csvData
-  console.log(csvData);
-
-  d3.selectAll("circle").remove();
-
-  // Format the date and cast the force value to a number
-  csvData.forEach(function(data) {
+    // remove existing x-axis
+    d3.select("#xAxis")
+        .remove();
     
-    var node = d3.select("svg").append('g');
-    var xLoc = (chartWidth) - (chartWidth * (((((maxX1-minX1)) - (data[xAxisParam]-minX1) ))/(maxX1-minX1))) + margin.left;
-    var yLoc = (chartHeight) - (chartHeight * 1/(maxY1-minY1) * (data[yAxisParam] - minY1)  ) + margin.top
+    switch (xValue) {
+        case "medianIncome":
+            console.log("medianIncome");
+             xScale = d3.scaleLinear()
+                .domain([0, d3.max(healthData, d => d.medianIncome)+10000])
+                .range([0, width]);
+                break;
+        case "noHighSchoolGrad":
+            console.log("noHighSchoolGrad");
+            xScale = d3.scaleLinear()
+                .domain([0, d3.max(healthData, d => d.noHighSchoolGrad)])
+                .range([0, width]);
+            break;
+        case "povertyAbove200":
+            console.log("povertyAbove200");
+            xScale = d3.scaleLinear()
+                .domain([0, d3.max(healthData, d => d.povertyAbove200)])
+                .range([0, width]);
+            break;
+    }
 
-    var d = data;
-    console.log(d.state);
-    node
-      .append("circle")
-        .attr("class", "circle")
-        .attr("cx", xLoc)
-        .attr("cy", yLoc)
-        .attr("r", 12)
-        .style("fill", "lightblue" )
-      .append("title")
-        .attr("text-anchor","middle")
-        .text(data['state']+"\n"+'------------------'+"\n"+xAxisParam+": "+data[xAxisParam]+"\n"+yAxisParam+": "+data[yAxisParam])
-        
-    node
-      .append("text")
+    // Create the axes
+    var bottomAxis = d3.axisBottom(xScale);
+
+    // Add x-axis
+    chartGroup.append("g")
+        .attr("transform", `translate(0, ${height})`)
+        .attr("id", "xAxis")
+        .call(bottomAxis)
+
+};
+
+function createYAxis(healthData, yValue){
+    console.log("Recreating Y Axis");
+
+    // remove existing y-axis
+    d3.select("#yAxis")
+    .remove();
+
+    //Create a scale for your dependent (y) coordinates
+    switch (yValue) {
+        case "heartAttack":
+            console.log("heartAttack");
+            yScale = d3.scaleLinear()
+                .domain([0, d3.max(healthData, d => d.heartAttack)+1])
+                .range([height, 0])
+            break;
+        case "hasCancer":
+            console.log("hasCancer");
+            yScale = d3.scaleLinear()
+                .domain([0, d3.max(healthData, d => d.hasCancer)+1])
+                .range([height, 0])
+            break;
+        case "hasDiabetes":
+            console.log("hasDiabetes");
+            yScale = d3.scaleLinear()
+                .domain([0, d3.max(healthData, d => d.hasDiabetes)+1])
+                .range([height, 0])
+            break;
+    }
+
+    var leftAxis = d3.axisLeft(yScale);
+
+    // Add y-axis
+    chartGroup.append("g")
+        .call(leftAxis)
+        .attr("id", "yAxis");
+
+};
+
+function transitionCircles(axis, dataColumn) {
+    var circles = chartGroup.selectAll("circle");
+    var texts = chartGroup.selectAll("#circleText");
+
+
+    if (axis == "x") {  // transition the cx vaalues
+        if (dataColumn == "medianIncome") {
+            circles.transition().duration(1000).attr("cx", d => xScale(d.medianIncome));
+            texts.transition().duration(1000).attr("x", d => xScale(d.medianIncome)-5);
+
+        } else if (dataColumn == "noHighSchoolGrad") {
+            circles.transition().duration(1000).attr("cx", d => xScale(d.noHighSchoolGrad));
+            texts.transition().duration(1000).attr("x", d => xScale(d.noHighSchoolGrad)-5);
+
+        }else {
+            circles.transition().duration(1000).attr("cx", d => xScale(d.povertyAbove200));
+            texts.transition().duration(1000).attr("x", d => xScale(d.povertyAbove200)-5);
+            }
+    } else {    // transition the cy values
+        if (dataColumn == "heartAttack") {
+            circles.transition().duration(1000).attr("cy", d => yScale(d.heartAttack));
+            texts.transition().duration(1000).attr("y", d => yScale(d.heartAttack)+4);
+        } else if (dataColumn == "hasCancer") {
+            circles.transition().duration(1000).attr("cy", d => yScale(d.hasCancer));
+            texts.transition().duration(1000).attr("y", d => yScale(d.hasCancer)+4);
+        }else {
+            circles.transition().duration(1000).attr("cy", d => yScale(d.hasDiabetes));
+            texts.transition().duration(1000).attr("y", d => yScale(d.hasDiabetes)+4);
+        }
+    }
+};
+
+function addChartTitle() {
+    d3.select("#chartTitle").remove();
+
+    var activeLabels = d3.selectAll(".labelbold");
+    console.log(activeLabels);
+    var titleText = activeLabels._groups[0][0].textContent + " vs " + activeLabels._groups[0][1].textContent;
+    console.log(titleText);
+
+    svg.append("text")
+        .attr("id", "chartTitle")
+        .attr("x", (svgWidth / 2))             
+        .attr("y", (margin.top / 2))
+        .attr("text-anchor", "middle")  
+        .style("font-size", "20px") 
+        .style("text-decoration", "underline")  
+        .text(titleText);
+
+}
+
+// Load csv data and draw the chart
+d3.csv("data/clean_data.csv", function (error, healthData) {
+
+    if (error) return console.warn(error);
+
+    console.log(healthData);
+
+    //cast the data from the csv as numbers
+    healthData.forEach(function (data) {
+        data.medianIncome = +data.medianIncome;
+        data.noHighSchoolGrad = + data.noHighSchoolGrad;
+        data.povertyAbove200 = + data.povertyAbove200;
+
+        data.heartAttack = +data.heartAttack;
+        data.hasCancer = +data.hasCancer;
+        data.hasDiabetes = +data.hasDiabetes;
+    })
+
+    createXAxis(healthData, "medianIncome");
+
+    // Add x-axis label for Median Income
+    svg.append("text")
+        .attr("class", "x label")
+        .attr("id", "medianIncome")
         .attr("text-anchor", "middle")
-        .style("fill","white")
-        .attr("x", xLoc)
-        .attr("y", yLoc+5)
-        .text(data.abbr)
-  
+        .attr("x", svgWidth/2)
+        .attr("y", height + 80)
+        .text("Median Household Income")
+        .classed("labelbold", true)
+        .on("click", function(){
+            // if this label is already bold then don't do anything
+            if (d3.select(this).classed("labelbold")) {
+                // ignore this click
+                console.log("Ignoring medianIncome click as it is already active");
+            } else {
+                //redraw x axis
+                createXAxis(healthData, "medianIncome");
+
+                d3.select(this).classed("labelbold", true);
+                d3.select("#noHighSchoolGrad").classed("labelbold", false);
+                d3.select("#povertyAbove200").classed("labelbold", false);
+
+                transitionCircles("x", "medianIncome");
+                addChartTitle();
+            }
+        })
+        .on("mouseover", function() {
+            d3.select(this).style("cursor", "pointer"); 
+        })
+        .on("mouseout", function() {
+            d3.select(this).style("cursor", "default"); 
+        });
+   
+    // Add x-axis label for No High School Graduation
+    svg.append("text")
+        .attr("class", "x label")
+        .attr("id", "noHighSchoolGrad")
+        .attr("text-anchor", "middle")
+        .attr("x", svgWidth/2)
+        .attr("y", height + 100)
+        .text("No High School Graduation (%)")
+        .on("click", function(){
+            // if this label is already bold then don't do anything
+            if (d3.select(this).classed("labelbold")) {
+                // ignore this click
+                console.log("Ignoring noHighSchoolGradLabel click as it is already active");
+            } else {
+                //redraw x axis
+                createXAxis(healthData, "noHighSchoolGrad");
+                
+                d3.select(this).classed("labelbold", true);
+                d3.select("#medianIncome").classed("labelbold", false);
+                d3.select("#povertyAbove200").classed("labelbold", false);
+
+                transitionCircles("x", "noHighSchoolGrad");
+                addChartTitle();
+            }
+        });
+
+   
+    // Add x-axis label for 200% Above Poverty
+    svg.append("text")
+        .attr("class", "x label")
+        .attr("id", "povertyAbove200")
+        .attr("text-anchor", "middle")
+        .attr("x", svgWidth/2)
+        .attr("y", height + 120)
+        .text("Above Poverty Line (%)")
+        .on("click", function(){
+            // if this label is already bold then don't do anything
+            if (d3.select(this).classed("labelbold")) {
+                // ignore this click
+                console.log("Ignoring povertyAbove200Label click as it is already active");
+            } else {
+                //redraw x axis
+                createXAxis(healthData, "povertyAbove200");
+                
+                d3.select(this).classed("labelbold", true);
+                d3.select("#medianIncome").classed("labelbold", false);
+                d3.select("#noHighSchoolGrad").classed("labelbold", false);
+
+                transitionCircles("x", "povertyAbove200");
+                addChartTitle();
+            }
+        });
+
+    createYAxis(healthData, "heartAttack");
+
+    // Add y-axis label for Heart Attack
+    svg.append("text")
+        .attr("class", "y label")
+        .attr("id", "heartAttack")
+        .attr("text-anchor", "middle")
+        .attr("x", -svgHeight/2)
+        .attr("y", 5)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text("Had Heart Attack (%)")
+        .classed("labelbold", true)
+        .on("click", function(){
+            // if this label is already bold then don't do anything
+            if (d3.select(this).classed("labelbold")) {
+                // ignore this click
+                console.log("Ignoring heartAttackLabel click as it is already active");
+            } else {
+                //redraw x axis
+                createYAxis(healthData, "heartAttack");
+                
+                d3.select(this).classed("labelbold", true);
+                d3.select("#hasCancer").classed("labelbold", false);
+                d3.select("#hasDiabetes").classed("labelbold", false);
+
+                transitionCircles("y", "heartAttack");
+                addChartTitle();
+            }
+        });
     
-  });
+    // Add y-axis label for Has Cancer
+    svg.append("text")
+        .attr("class", "y label")
+        .attr("id", "hasCancer")
+        .attr("text-anchor", "middle")
+        .attr("x", -svgHeight/2)
+        .attr("y", 25)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text("Had Cancer (%)")
+        .on("click", function(){
+            // if this label is already bold then don't do anything
+            if (d3.select(this).classed("labelbold")) {
+                // ignore this click
+                console.log("Ignoring hasCancer click as it is already active");
+            } else {
+                //redraw x axis
+                createYAxis(healthData, "hasCancer");
+                
+                d3.select(this).classed("labelbold", true);
+                d3.select("#heartAttack").classed("labelbold", false);
+                d3.select("#hasDiabetes").classed("labelbold", false);
+
+                transitionCircles("y", "hasCancer");
+                addChartTitle();
+            }
+        });
+
+    // Add y-axis label for College Plus Education
+    svg.append("text")
+        .attr("class", "y label")
+        .attr("id", "hasDiabetes")
+        .attr("text-anchor", "middle")
+        .attr("x", -svgHeight/2)
+        .attr("y", 45)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text("Had Diabetes (%)")
+        .on("click", function(){
+            // if this label is already bold then don't do anything
+            if (d3.select(this).classed("labelbold")) {
+                // ignore this click
+                console.log("Ignoring hasDiabetes click as it is already active");
+            } else {
+                //redraw x axis
+                createYAxis(healthData, "hasDiabetes");
+                
+                d3.select(this).classed("labelbold", true);
+                d3.select("#heartAttack").classed("labelbold", false);
+                d3.select("#hasCancer").classed("labelbold", false);
+
+                transitionCircles("y", "hasDiabetes");
+                addChartTitle();
+            }
+        });
+    
+    // Change the mousepointer when hovered over any of the labels to indicate that they
+    // are clickable
+    d3.selectAll(".label")
+    .on("mouseover", function() {
+        d3.select(this).style("cursor", "pointer"); 
+    })
+    .on("mouseout", function() {
+        d3.select(this).style("cursor", "default"); 
+    });
+
+    // append circles - one for each data point
+    var circlesGroup = chartGroup.selectAll("circle")
+        .data(healthData)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xScale(d.medianIncome))
+        .attr("cy", d => yScale(d.heartAttack))
+        .attr("r", "10")
+        .attr("fill", "lightblue")
+        .attr("stroke-width", "1")
+        .attr("stroke", "black");
+    
+    // add the text on top of the circles
+    var textGroup = chartGroup.selectAll("#circleText")
+        .data(healthData)
+        .enter()
+        .append("text")
+        .text(d => d.stateAbbr)
+        .attr("id", "circleText")
+        .attr("x", d => xScale(d.medianIncome)-5)
+        .attr("y", d => yScale(d.heartAttack)+4)
+        .attr("stroke-width", "1")
+        .attr("fill", "black")
+        .attr("font-size", 8);
+
+    addChartTitle();
 
 
-  // Configure a linear scale with a range between 0 and the chartWidth
-  var xLinearScale = d3.scaleLinear().range([0, chartWidth]);
+    // Initialize Tooltip
+    var toolTip = d3.tip()
+    .attr("class", "d3-tip")
+    .offset([-10, 0])
+    .html(function(d){
+        var activeLabels = d3.selectAll(".labelbold");
+        var labelx = activeLabels._groups[0][0].id;
+        var labely = activeLabels._groups[0][1].id;
+        
+        var xValue = null;
+        var yValue = null;
+
+        switch(labelx) {
+            case "medianIncome":
+                xValue = d.medianIncome;
+                break;        
+            case "noHighSchoolGrad":
+                xValue = d.noHighSchoolGrad;
+                break;
+            default:
+                xValue = d.povertyAbove200;
+                break;
+        }
+        
+        switch(labely) {
+            case "heartAttack":
+                yValue = d.heartAttack;
+                break;        
+            case "hasCancer":
+                yValue = d.hasCancer;
+                break;
+            default:
+                yValue = d.hasDiabetes;
+                break;
+        }
+
+        var tipText = `<strong>State:</strong> <span style='color:lightblue'>${d.state}</span><br>
+            <strong>${labelx}:</strong> <span style='color:lightblue'>${xValue}</span><br>
+            <strong>${labely}:</strong> <span style='color:lightblue'>${yValue}</span><br>`
+
+        return tipText;
+
+    });
+
+    chartGroup.call(toolTip);
+
+    // Create "mouseover" event listener to display tooltip
+    circlesGroup.on("mouseover", function (d) {
+        toolTip.show(d);
+    })
+    // Create "mouseout" event listener to hide tooltip
+    .on("mouseout", function (d) {
+        toolTip.hide(d);
+    });
+
   
-
-  // Configure a linear scale with a range between the chartHeight and 0
-  var yLinearScale = d3.scaleLinear().range([chartHeight, 0]);
-
-  // Set the domain for the xLinearScale function
-  xLinearScale.domain([ minX1, maxX1]);
-  
-  // Set the domain for the xLinearScale function
-  yLinearScale.domain([ minY1, maxY1 ]);
-
-  // Create two new functions passing the scales in as arguments
-  // These will be used to create the chart's axes
-  var bottomAxis = d3.axisBottom(xLinearScale);
-  var leftAxis = d3.axisLeft(yLinearScale);
-
-  // Append an SVG group element to the SVG area, create the left axis inside of it
-  svg.append("g")
-    .attr("class", "y-axis")
-    .call(leftAxis);
-
-  // Append an SVG group element to the SVG area, create the bottom axis inside of it
-  // Translate the bottom axis to the bottom of the page
-  svg.append("g")
-    .attr("class", "x-axis")
-    .attr("transform", "translate(0, " + chartHeight + ")")
-    .call(bottomAxis);
-
-  svg
-    .append("g")
-      .attr("transform", "translate(0, " + chartHeight + ")")
-    .append("text")
-      .attr("text-anchor","middle")
-      .attr("class", "healthcare")
-      .attr("transform","rotate(-90)")
-      .attr("x", svgHeight/3)
-      .attr("y", -svgWidth/20)
-      .style("font-weight", 'bold')
-      .style("fill", 'blue')
-      .on("click", function () {
-        console.log("testing111");
-        setUpdatedAxisData(xAxisParam, "healthcare", svg);
-      })
-      .text(yLabel1);
-      
- 
-  svg
-    .append("g")
-      .attr("transform", "translate(0, " + chartHeight + ")")
-    .append("text")
-      .attr("text-anchor","middle")
-      .attr("class", "smokes")
-      .attr("transform","rotate(-90)")
-      .attr("x", svgHeight/3)
-      .attr("y", -(svgWidth/20 + (margin.left/8)))
-      .style("font-weight", 'bold')
-      .style("fill", 'black')
-      .on("click", function () {
-        console.log("testing222");
-        setUpdatedAxisData(xAxisParam, "smokes", svg);
-      })
-      .text(yLabel2);
-
-  svg
-    .append("g")
-      .attr("transform", "translate(0, " + chartHeight + ")")
-    .append("text")
-      .attr("text-anchor","middle")
-      .attr("class", "obesity")
-      .attr("transform","rotate(-90)")
-      .attr("x", svgHeight/3)
-      .attr("y", -(svgWidth/20 + (margin.left/4)))
-      .style("font-weight", 'bold')
-      .style("fill", 'black')
-      .on("click", function () {
-        console.log("testing333");
-        setUpdatedAxisData(xAxisParam, "obesity", svg);
-      })
-      .text(yLabel3);
-
-  svg
-    .append("g")
-      .attr("transform", "translate(" + chartWidth + ", 0)")
-    .append("text")
-      .attr("text-anchor","middle")
-      .attr("class", "poverty")
-      .attr("x", -svgWidth/3)
-      .attr("y", chartHeight+margin.top-(margin.bottom/5))
-      .style("font-weight", 'bold')
-      .style("fill", 'black')
-      .on("click", function () {
-        console.log("testing444");
-        setUpdatedAxisData("poverty", yAxisParam, svg);
-      })
-      .text(xLabel1);
-
-  svg
-    .append("g")
-      .attr("transform", "translate(" + chartWidth + ", 0)")
-    .append("text")
-      .attr("text-anchor","middle")
-      .attr("class", "age")
-      .attr("x", -svgWidth/3)
-      .attr("y", chartHeight+margin.top)
-      .style("font-weight", 'bold')
-      .style("fill", 'black')
-      .on("click", function () {
-        console.log("testing555");
-        setUpdatedAxisData("age", yAxisParam, svg);
-      })
-      .text(xLabel2);
-
-  svg
-    .append("g")
-      .attr("transform", "translate(" + chartWidth + ", 0)")
-    .append("text")
-      .attr("text-anchor","middle")
-      .attr("class", "income")
-      .attr("x", -svgWidth/3)
-      .attr("y", chartHeight+margin.top+(margin.bottom/5))
-      .style("font-weight", 'bold')
-      .style("fill", 'blue')
-      .on("click", function () {
-        console.log("testing666");
-        setUpdatedAxisData("income", yAxisParam, svg);
-      })
-      .text(xLabel3);
-
-
-
-  
-      
 });
 
-};
-
-function setUpdatedAxisData(xAxisParam, yAxisParam, svg){
-  
-  
-    console.log("X Axis: ", xAxisParam);
-    console.log("Y Axis: ", yAxisParam);
-
-    
-    // Define SVG area dimensions
-  var svgWidth = 800;
-  var svgHeight = 600;
-  
-  // // Define the chart's margins as an object
-  var margin = {
-    top: 60,
-    right: 60,
-    bottom: 100,
-    left: 160
-  };
-  
-  // Define dimensions of the chart area
-  var chartWidth = svgWidth - margin.left - margin.right;
-  var chartHeight = svgHeight - margin.top - margin.bottom;
-  
-  
-  factorY = 1;
-  yLabel1 = "Lacks Healthcare (%)";
-  yLabel2 = "Smokes (%)";
-  yLabel3 = "Obese (%)";
-  xLabel1 = "In Poverty (%)";
-  xLabel2 = "Age (Median)";
-  xLabel3 = "Household Income (Median)";
-  
-  if(xAxisParam == "age"){
-    factorX = 1;
-  };
-  if(xAxisParam == "poverty"){
-    factorX = 1;
-  };
-  if(xAxisParam == "income"){
-    factorX = 1000;
-  };
-  
-  // Load data from forcepoints.csv
-  d3.csv("../static/data.csv", function(error, csvData) {
-  
-    minX1 = d3.min(csvData, function(data) {
-      data[xAxisParam] = parseFloat(data[xAxisParam]);
-      return data[xAxisParam];
-    }) - (1*factorX) ;
-    minY1 = d3.min(csvData, function(data) {
-      data[yAxisParam] = parseFloat(data[yAxisParam]);
-      return data[yAxisParam];
-    }) - (0.5*factorY);
-    maxX1 = d3.max(csvData, function(data) {
-      data[xAxisParam] = parseFloat(data[xAxisParam]);
-      return data[xAxisParam];
-    }) + (1.5*factorX);
-    maxY1 = d3.max(csvData, function(data) {
-      data[yAxisParam] = parseFloat(data[yAxisParam]);
-      return data[yAxisParam];
-    }) + (1*factorY) ;
-    console.log("first:"+"minX:"+minX1+";maxX:"+maxX1+"minY:"+minY1+";maxY:"+maxY1);
-    console.log("Testing3");
-    
-    // Throw an error if one occurs
-    if (error) throw error;
-  
-    // Print the csvData
-    console.log(csvData);
-  
-    d3.selectAll("circle").remove();
-
-    // Format the date and cast the force value to a number
-    csvData.forEach(function(data) {
-      
-      var node = d3.select("svg").append('g');
-      var xLoc = (chartWidth) - (chartWidth * (((((maxX1-minX1)) - (data[xAxisParam]-minX1) ))/(maxX1-minX1))) + margin.left;
-      var yLoc = (chartHeight) - (chartHeight * 1/(maxY1-minY1) * (data[yAxisParam] - minY1)  ) + margin.top
-  
-     
-      node
-        .append("circle")
-          .attr("class", "circle")
-          .attr("cx", xLoc)
-          .attr("cy", yLoc)
-          .attr("r", 12)
-          .style("fill", "lightblue" )
-        .append("title")
-          .attr("text-anchor","middle")
-          .text(data['state']+"\n"+'------------------'+"\n"+xAxisParam+": "+data[xAxisParam]+"\n"+yAxisParam+": "+data[yAxisParam])
-      
-      node
-        .append("text")
-          .attr("text-anchor", "middle")
-          .style("fill","white")
-          .attr("x", xLoc)
-          .attr("y", yLoc+5)
-          .text(data.abbr)
-    
-  
-    });
-  
-    // Configure a linear scale with a range between 0 and the chartWidth
-    var xLinearScale = d3.scaleLinear().range([0, chartWidth]);
-    
-  
-    // Configure a linear scale with a range between the chartHeight and 0
-    var yLinearScale = d3.scaleLinear().range([chartHeight, 0]);
-  
-    // Set the domain for the xLinearScale function
-    xLinearScale.domain([ minX1, maxX1]);
-    
-    // Set the domain for the xLinearScale function
-    yLinearScale.domain([ minY1, maxY1 ]);
-  
-    // Create two new functions passing the scales in as arguments
-    // These will be used to create the chart's axes
-    var bottomAxis = d3.axisBottom(xLinearScale);
-    var leftAxis = d3.axisLeft(yLinearScale);
-  
-  
-    // Update y-axis
-    svg.selectAll("g .y-axis")
-      .call(leftAxis);
-
-    // Update x-axis
-    svg.selectAll("g .x-axis")
-      .call(bottomAxis);
-  
-  
-  svg
-  .append("g")
-    .attr("transform", "translate(0, " + chartHeight + ")")
-  .append("text")
-    .attr("text-anchor","middle")
-    .attr("class", "healthcare")
-    .attr("transform","rotate(-90)")
-    .attr("x", svgHeight/3)
-    .attr("y", -svgWidth/20)
-    .style("font-weight", 'bold')
-    .on("click", function () {
-      console.log("testing111");
-      setUpdatedAxisData(xAxisParam, "healthcare", svg);
-    })
-    .text(yLabel1);
-    
-
-svg
-  .append("g")
-    .attr("transform", "translate(0, " + chartHeight + ")")
-  .append("text")
-    .attr("text-anchor","middle")
-    .attr("class", "smokes")
-    .attr("transform","rotate(-90)")
-    .attr("x", svgHeight/3)
-    .attr("y", -(svgWidth/20 + (margin.left/8)))
-    .style("font-weight", 'bold')
-    .on("click", function () {
-      console.log("testing222");
-      setUpdatedAxisData(xAxisParam, "smokes", svg);
-    })
-    .text(yLabel2);
-
-svg
-  .append("g")
-    .attr("transform", "translate(0, " + chartHeight + ")")
-  .append("text")
-    .attr("text-anchor","middle")
-    .attr("class", "obesity")
-    .attr("transform","rotate(-90)")
-    .attr("x", svgHeight/3)
-    .attr("y", -(svgWidth/20 + (margin.left/4)))
-    .style("font-weight", 'bold')
-    .on("click", function () {
-      console.log("testing333");
-      setUpdatedAxisData(xAxisParam, "obesity", svg);
-    })
-    .text(yLabel3);
-
-svg
-  .append("g")
-    .attr("transform", "translate(" + chartWidth + ", 0)")
-  .append("text")
-    .attr("text-anchor","middle")
-    .attr("class", "poverty")
-    .attr("x", -svgWidth/3)
-    .attr("y", chartHeight+margin.top-(margin.bottom/5))
-    .style("font-weight", 'bold')
-    .on("click", function () {
-      console.log("testing444");
-      setUpdatedAxisData("poverty", yAxisParam, svg);
-    })
-    .text(xLabel1);
-
-svg
-  .append("g")
-    .attr("transform", "translate(" + chartWidth + ", 0)")
-  .append("text")
-    .attr("text-anchor","middle")
-    .attr("class", "age")
-    .attr("x", -svgWidth/3)
-    .attr("y", chartHeight+margin.top)
-    .style("font-weight", 'bold')
-    .on("click", function () {
-      console.log("testing555");
-      setUpdatedAxisData("age", yAxisParam, svg);
-    })
-    .text(xLabel2);
-
-svg
-  .append("g")
-    .attr("transform", "translate(" + chartWidth + ", 0)")
-  .append("text")
-    .attr("text-anchor","middle")
-    .attr("class", "income")
-    .attr("x", -svgWidth/3)
-    .attr("y", chartHeight+margin.top+(margin.bottom/5))
-    .style("font-weight", 'bold')
-    .on("click", function () {
-      console.log("testing666");
-      setUpdatedAxisData("income", yAxisParam, svg);
-    })
-    .text(xLabel3);
-
-
-    d3.selectAll("."+xAxisParam).style("fill", "blue");
-    d3.selectAll("."+yAxisParam).style("fill", "blue");
-
-    
-        
-  });
-  
-  };
-  
-setOriginalAxisData("income", "healthcare");
+// Add the Chart Analysis description for the chart
+var chartAnalysis = d3.select("#chartAnalysis")
+    .append("text")
+    .html(`<br>The above chart shows our analysis on the current trends that are shaping people's lives. 
+    We show some of the health risks that occur in people with certain demographics as listed here.
+    We see that higher Median Household Income fewer the percentage of people that have had heart attacks or diabetes. 
+    However Median Income does not seem to affect the percent of people having Cancer as much. This might be because of 
+    the ability to get good preventive health care and lead a healthier lifestyle with the high incomes.
+    <br><br>
+    We also see that as the percentage of people with No High School Graduation increases, the percentage of people having
+    heart attacks and diabetes also increases but it doesn't really affect Cancer as much. This shows that with more education
+    there is more health awareness and also more income leading to better preventive care and lifestyle which again verifies our 
+    analysis above.
+    <br><br>
+    Lastly we also see a similar trend with the percentage of people being 200% above the poverty line. With more percentage of people
+    above the poverty line, there is a fewer percentage of people with heart attacks and diabetes, however it does not affect the p
+    ercentage of people with cancer as much. This also verifies out analysis above.
+    <br><br>
+    You can try all the combinations in the above graph and see for yourself how the various demographics parameters affect the 
+    health risks. Just click on the axis label to choose your parameter.`);
