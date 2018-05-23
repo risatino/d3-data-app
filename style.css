@@ -1,3 +1,7 @@
+* {
+  font-family: 'Karla', sans-serif !important;
+}
+
 .label {
     font-size: 15px;
 }
@@ -7,7 +11,7 @@
 }
 
 .labelfade {
-    color: purple; 
+    color: blue; 
 }
 
 .d3-tip {
@@ -40,6 +44,10 @@
   }
 
   .data_header {
-    background-image: url('images/news450pxcrop_pexel.png');
-    height: 450px;
+    background-image: url('images/news260pxcrop_pexel.png');
+    height: 260px;
+  }
+
+  footer {
+    height: 70px;
   }

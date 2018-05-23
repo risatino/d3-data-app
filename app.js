@@ -19,13 +19,11 @@ var margin = {
   var width = svgWidth - margin.left - margin.right;
   var height = svgHeight - margin.top - margin.bottom;
 
-  //Scales for the axes
+  // scales for the axes
   var xScale = null;
   var yScale = null;
 
-// Create an SVG wrapper,
-// append an SVG group that will hold our chart,
-// and shift the latter by left and top margins.
+// Create an SVG wrapper + append an SVG group that will hold chart
 // =================================
 var svg = d3.select("#svgcontainer")
     .append("svg")
@@ -455,20 +453,17 @@ d3.csv("data/clean_data.csv", function (error, healthData) {
 // Add the Chart Analysis description for the chart
 var chartAnalysis = d3.select("#chartAnalysis")
     .append("text")
-    .html(`<br>The above chart shows our analysis on the current trends that are shaping people's lives. 
-    We show some of the health risks that occur in people with certain demographics as listed here.
-    We see that higher Median Household Income fewer the percentage of people that have had heart attacks or diabetes. 
-    However Median Income does not seem to affect the percent of people having Cancer as much. This might be because of 
-    the ability to get good preventive health care and lead a healthier lifestyle with the high incomes.
+    .html(`<br>This chart is an analysis on the current trends that are shaping people's lives. 
+    You can see some of the health risks that occur in people with certain demographics as listed here.
+    We see that higher Median Household Income equate to a lower percentage of people that have had heart attacks or diabetes. 
+    Median Income does not seem to affect the percent of people having Cancer as much. This might be because of 
+    the ability to get good preventive health care and lead a healthier lifestyle due to higher household incomes.
     <br><br>
     We also see that as the percentage of people with No High School Graduation increases, the percentage of people having
-    heart attacks and diabetes also increases but it doesn't really affect Cancer as much. This shows that with more education
-    there is more health awareness and also more income leading to better preventive care and lifestyle which again verifies our 
-    analysis above.
+    heart attacks and diabetes also increases, but doesn't really affect Cancer growth as much. This shows that with better education, people have heightened health awareness which usually provides higher income, and leads to better preventive care. This also includes a better quality of life, which verifies our analysis above.
     <br><br>
-    Lastly we also see a similar trend with the percentage of people being 200% above the poverty line. With more percentage of people
-    above the poverty line, there is a fewer percentage of people with heart attacks and diabetes, however it does not affect the p
-    ercentage of people with cancer as much. This also verifies out analysis above.
+    We also see a similar trend with the percentage of people being 200% above the poverty line. With a higher percentage of people
+    above the poverty line, there is a lower percentage of people with heart attacks and diabetes, however it does not affect the percentage of people with cancer as much. This also verifies the analysis above.
     <br><br>
-    You can try all the combinations in the above graph and see for yourself how the various demographics parameters affect the 
+    You can try all the combinations in the graph above and see for yourself how the various demographics parameters affect the 
     health risks. Just click on the axis label to choose your parameter.`);
